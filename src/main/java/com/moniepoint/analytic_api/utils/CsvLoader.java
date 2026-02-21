@@ -4,6 +4,7 @@ import com.moniepoint.analytic_api.entity.MerchantActivityRecord;
 import com.moniepoint.analytic_api.repository.MerchantActivityRecordRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -21,7 +22,6 @@ import java.util.UUID;
 public class CsvLoader {
 
     private static final Logger log = LoggerFactory.getLogger(CsvLoader.class);
-    private static final String CSV_FOLDER = "data/";
 
     private final MerchantActivityRecordRepository repository;
 
@@ -32,12 +32,23 @@ public class CsvLoader {
     @EventListener(ApplicationReadyEvent.class)
     public void loadCsvsOnStartup() {
         log.info("Starting background CSV loading...");
-        File folder = new File(CSV_FOLDER);
-        File[] files = folder.listFiles((dir, name) -> name.matches("activity_.*\\.csv"));
-        if (files == null || files.length == 0) {
-            log.warn("No CSV files found in {}", CSV_FOLDER);
+        log.info("Working directory: {}", System.getProperty("user.dir"));
+
+        File folder;
+        try {
+            folder = new ClassPathResource("data/").getFile();
+        } catch (Exception e) {
+            log.error("Could not locate data/ folder on classpath: {}", e.getMessage());
             return;
         }
+
+        File[] files = folder.listFiles((dir, name) -> name.matches("activities_.*\\.csv"));
+        if (files == null || files.length == 0) {
+            log.warn("No CSV files found in data/");
+            return;
+        }
+
+        log.info("Found {} CSV files", files.length);
         for (File file : files) {
             loadCsvAsync(file.getAbsolutePath());
         }

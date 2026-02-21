@@ -34,4 +34,4 @@ build/
 
 ### ignore data
 data/*.csv
-src/main/resources/data/
+src/main/resources/data/*.csv

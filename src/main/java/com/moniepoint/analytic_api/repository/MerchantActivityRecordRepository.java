@@ -26,26 +26,28 @@ public interface MerchantActivityRecordRepository extends JpaRepository<Merchant
 //    Optional<Object[]> findTopMerchantBySuccessfulVolume();
 
     // 2. Count of unique merchants with at least one successful event per month
-//    @Query("""
-//            SELECT FUNCTION('DATE_FORMAT', m.eventTimestamp, '%Y-%m'), COUNT(DISTINCT m.merchantId)
-//            FROM MerchantActivityRecord m
-//            WHERE m.status = 'SUCCESS'
-//            AND m.eventTimestamp IS NOT NULL
-//            GROUP BY FUNCTION('DATE_FORMAT', m.eventTimestamp, '%Y-%m')
-//            ORDER BY FUNCTION('DATE_FORMAT', m.eventTimestamp, '%Y-%m') ASC
-//            """)
-//    List<Object[]> findMonthlyActiveMerchants();
-
     @Query(value = """
-        SELECT FORMATDATETIME(event_timestamp, 'yyyy-MM') as event_month,
+        SELECT TO_CHAR(event_timestamp, 'YYYY-MM') as event_month,
                COUNT(DISTINCT merchant_id) as merchant_count
         FROM merchant_activity_records
         WHERE status = 'SUCCESS'
         AND event_timestamp IS NOT NULL
-        GROUP BY FORMATDATETIME(event_timestamp, 'yyyy-MM')
+        GROUP BY TO_CHAR(event_timestamp, 'YYYY-MM')
         ORDER BY event_month ASC
         """, nativeQuery = true)
     List<Object[]> findMonthlyActiveMerchants();
+
+    // for h2 db
+//    @Query(value = """
+//        SELECT FORMATDATETIME(event_timestamp, 'yyyy-MM') as event_month,
+//               COUNT(DISTINCT merchant_id) as merchant_count
+//        FROM merchant_activity_records
+//        WHERE status = 'SUCCESS'
+//        AND event_timestamp IS NOT NULL
+//        GROUP BY FORMATDATETIME(event_timestamp, 'yyyy-MM')
+//        ORDER BY event_month ASC
+//        """, nativeQuery = true)
+//    List<Object[]> findMonthlyActiveMerchants();
 
     // 3. Unique merchant count per product sorted by count descending
     @Query("""
